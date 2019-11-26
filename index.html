@@ -264,8 +264,8 @@
 
           for (const evtId in dates) {
             let { start, end } = dates[evtId];
-            start = moment.utc(start);
-            end = moment.utc(end);
+            start = moment.utc(start).local();
+            end = moment.utc(end).local();
 
             // skip whatever isn't in the current day schedule
             const range = moment.range(start, end);
@@ -279,7 +279,7 @@
 
             // render
             const colstart =
-              2 + Math.floor(start.diff(open_time, "minutes") / 15);
+              3 + Math.floor(start.diff(open_time, "minutes") / 15);
             const colspan = Math.ceil(end.diff(start, "minutes") / 15);
             const startTime = start.local().format("hh:mm a");
             console.log("start = " + start);
