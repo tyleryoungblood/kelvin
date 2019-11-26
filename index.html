@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RCPL Room Schedule</title>
+
+    <style type="text/css">
+      .hidden {
+        display: none;
+      }
+      .room-list {
+        list-style: none;
+      }
+      .sectionTitle {
+        font-size: 15px !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage1"></div>
+    <div id="stage2"></div>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"
+      integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/moment-range/4.0.2/moment-range.js"
+      integrity="sha256-bB6c2ZfNzG6Tv8MSu/pqUl0y91h86M/T+1w0WrCZhGw="
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://unpkg.com/mermaid@8.4.2/dist/mermaid.min.js"></script>
+    <script>
+      window["moment-range"].extendMoment(moment);
+
+      const mermaidConfig = {
+        startOnLoad: true,
+        gantt: {
+          titleTopMargin: 25,
+          barHeight: 20,
+          barGap: 10,
+          topPadding: 75,
+          leftPadding: 175
+        },
+        theme: "neutral"
+      };
+
+      mermaid.initialize(mermaidConfig);
+
+      const rcplBase = "https://larvis.com/rcpl";
+      //const rcplBase = "https://www.richlandlibrary.com";
+
+      const fetchJson = async url => {
+        const response = await fetch(url);
+        return await response.json();
+      };
+
+      const fetchData = async () => {
+        const url =
+          rcplBase +
+          "/jsonapi/node/room?filter%5Bstatus%5D%5Bvalue%5D=1&filter%5Bfield_staff_use_only%5D%5Bvalue%5D=false&filter%5Blocations%5D%5Bgroup%5D%5Bconjunction%5D=AND&filter%5BwithLocation%5D%5Bcondition%5D%5Bpath%5D=field_location.id&filter%5BwithLocation%5D%5Bcondition%5D%5Boperator%5D=%3C%3E&filter%5BwithLocation%5D%5Bcondition%5D%5BmemberOf%5D=locations&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5Bpath%5D=field_location.field_branch_location&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5Bvalue%5D=1&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5BmemberOf%5D=locations&fields%5Bnode--room%5D=uuid%2Cstatus%2Ctitle%2Croom_thumbnail%2Cfield_capacity_max%2Cfield_capacity_min%2Cfield_reservable_online%2Cfield_room_fees%2Cfield_room_standard_equipment%2Cfield_reservation_phone_number%2Cfield_text_content%2Cfield_text_intro%2Cfield_text_teaser%2Ctype%2Cuid%2Cimage_primary%2Cfield_location%2Cfield_room_type&include=image_primary%2Cimage_primary.field_media_image%2Cfield_location&sort=title";
+        console.log("Fetching rooms");
+        return await fetchJson(url);
+      };
+
+      const fetchCachedData = async () => {
+        const now = moment();
+        let data = localStorage.roomData && JSON.parse(localStorage.roomData);
+        const invalid =
+          !data ||
+          !data.expires ||
+          !now.isBefore(moment(data.expires).add(1, "days"));
+        if (invalid) {
+          data = await fetchData();
+          data.expires = moment().format();
+          localStorage.roomData = JSON.stringify(data);
+        }
+        return data;
+      };
+
+      const getLocations = data => {
+        return data["included"]
+          .filter(obj => obj.type === "node--location")
+          .map(obj => ({
+            id: obj.id,
+            title: obj.attributes.title,
+            hours: obj.attributes.field_location_hours
+          }));
+      };
+
+      const getLocationRooms = (data, location) => {
+        return data["data"]
+          .filter(
+            obj =>
+              obj.type === "node--room" &&
+              obj.relationships.field_location.data.id === location.id
+          )
+          .map(obj => ({
+            id: obj.id,
+            title: obj.attributes.title,
+            location: location
+          }));
+      };
+
+      const saveSelectedRooms = rooms => {
+        localStorage.selectedRooms = JSON.stringify(rooms.map(room => room.id));
+      };
+
+      const loadSelectedRooms = () => {
+        if (localStorage.selectedRooms) {
+          const roomIds = JSON.parse(localStorage.selectedRooms);
+          for (const id of roomIds) {
+            const el = document.querySelector(`input[data-room="${id}"]`);
+            if (el) {
+              el.checked = true;
+            }
+          }
+        }
+      };
+
+      // begin here
+      fetchCachedData().then(data => {
+        console.log(data);
+        const locations = getLocations(data).map(loc => ({
+          ...loc,
+          rooms: getLocationRooms(data, loc)
+        }));
+
+        window.locationData = locations;
+
+        let html = [
+          "<p>",
+          "Select the rooms to show and click show at the bottom",
+          "</p>"
+        ].join("\n");
+        for (const loc of locations) {
+          let rstr = loc.rooms.reduce(
+            (acc, room) =>
+              acc +
+              `
+                        <li class="room-item">
+                          <input 
+                            type="checkbox" 
+                            class="room-input" 
+                            data-room="${room.id}" 
+                            />
+                          ${room.title}
+                        </li>`,
+            ""
+          );
+          html += `<div class="location" data-location="${loc.id}">
+                        <h3>${loc.title}</h3>
+                        <ul class="room-list">
+                          ${rstr}
+                        </ul>
+                        </div>`;
+        }
+        html += '\n<button onClick="showLocation()">Show</button>';
+        document.getElementById("stage1").innerHTML = html;
+        loadSelectedRooms();
+      });
+
+      const findRoom = roomId => {
+        for (const loc of locationData) {
+          for (const room of loc.rooms) {
+            if (room.id === roomId) {
+              return room;
+            }
+          }
+        }
+      };
+
+      const getRoomsAvailability = async rooms => {
+        const url = rcplBase + "/api/rooms/availability";
+        const dateFormat = "YYYY-MM-DDTHH:mm:ss"; // without the Z
+        const payload = {
+          rooms: rooms.map(room => room.id),
+          start: moment()
+            .startOf("day")
+            .utc()
+            .format(dateFormat),
+          end: moment()
+            .endOf("day")
+            .utc()
+            .format(dateFormat)
+        };
+        const response = await fetch(url, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        return await response.json();
+      };
+
+      const showChart = async rooms => {
+        console.log("Showing chart");
+        const now = moment();
+        const dateFormat = "YYYY-MM-DDTHH:mm:ssZ";
+        let code = [
+          "gantt",
+          `  dateFormat ${dateFormat}`,
+          "  axisFormat %H:%M",
+          `  title Room Schedule | Last updated ${moment().format("hh:mm A")}`,
+          ""
+        ];
+
+        const start_time = moment.min(
+          rooms.map(room => {
+            const hours = room.location.hours[now.day()].starthours;
+            const time = moment()
+              .hour(Math.floor(hours / 100))
+              .minute(hours % 100);
+            return time;
+          })
+        );
+        const end_time = moment.max(
+          rooms.map(room => {
+            const hours = room.location.hours[now.day()].endhours;
+            const time = moment()
+              .hour(Math.floor(hours / 100))
+              .minute(hours % 100);
+            return time;
+          })
+        );
+
+        const start_str = start_time.format(dateFormat);
+        const end_str = end_time.format(dateFormat);
+
+        code = [
+          ...code,
+          "  section Open",
+          `  Hours of Operation  :hidden hours, ${start_str}, ${end_str}`,
+          ""
+        ];
+
+        const open_range = moment.range(start_time, end_time);
+        const events = await getRoomsAvailability(rooms);
+        for (const room of rooms) {
+          if (events[room.id] && events[room.id].is_closed) {
+            continue;
+          }
+
+          let section = [` section ${room.title}`];
+          const dates = events[room.id] && events[room.id].dates;
+          if (dates) {
+            for (const evtId in dates) {
+              let { start, end } = dates[evtId];
+              start = moment.utc(start);
+              end = moment.utc(end);
+
+              // skip whatever isn't in the current day schedule
+              const range = moment.range(start, end);
+              if (!range.overlaps(open_range)) {
+                continue;
+              }
+
+              // truncate to open hours
+              start = open_range.contains(start) ? start : open_range.start;
+              end = open_range.contains(end) ? end : open_range.end;
+
+              start = start.local().format(dateFormat);
+              end = end.local().format(dateFormat);
+              section = [
+                ...section,
+                `  Reserved  :reserved, ${start}, ${end}`,
+                ""
+              ];
+            }
+          }
+          code = [...code, ...section];
+        }
+        console.log(code);
+
+        const graphDefinition = code.join("\n");
+        const graph = mermaid.render(
+          "schedule-chart",
+          graphDefinition,
+          (svgCode, bindFunctions) => {
+            const stage2 = document.getElementById("stage2");
+            console.log(stage2);
+            stage2.innerHTML = svgCode;
+          }
+        );
+      };
+
+      function showLocation() {
+        console.log("Showing locations");
+        const rooms = Array.prototype.map.call(
+          document.querySelectorAll(".room-input:checked"),
+          el => {
+            return findRoom(el.dataset.room);
+          }
+        );
+        saveSelectedRooms(rooms);
+        console.log(rooms);
+
+        document.getElementById("stage1").classList.add("hidden");
+        const stage2 = document.getElementById("stage2");
+        stage2.innerHTML = "Loading...";
+
+        setInterval(() => {
+          showChart(rooms).then(() => {
+            console.log("Chart updated");
+          });
+        }, 1000 * 60 * 5);
+        showChart(rooms).then(() => {
+          console.log("Chart displayed");
+        });
+      }
+    </script>
+  </body>
+</html>
