@@ -10,8 +10,32 @@
       .room-list {
         list-style: none;
       }
-      .sectionTitle {
-        font-size: 15px !important;
+      * {
+        box-sizing: border-box;
+      }
+      .hidden {
+        display: none;
+      }
+
+      #stage2 {
+        display: grid;
+        background-color: lightblue;
+      }
+
+      #stage2 > div {
+        border: 1px solid blue;
+        background-color: white;
+        padding: 0.3em;
+        margin: 0.1em;
+        color: black;
+      }
+
+      #stage2 > div.reserved-event {
+        background-color: darkblue;
+        border: 0;
+      }
+      #stage2 > div.room-name {
+        background-color: white;
       }
     </style>
   </head>
@@ -19,6 +43,11 @@
     <div id="stage1"></div>
     <div id="stage2"></div>
 
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+      crossorigin="anonymous"
+    ></script>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"
       integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ="
@@ -191,19 +220,11 @@
         return await response.json();
       };
 
-      const showChart = async rooms => {
+      const showChart2 = async rooms => {
         console.log("Showing chart");
         const now = moment();
-        const dateFormat = "YYYY-MM-DDTHH:mm:ssZ";
-        let code = [
-          "gantt",
-          `  dateFormat ${dateFormat}`,
-          "  axisFormat %H:%M",
-          `  title Room Schedule | Last updated ${moment().format("hh:mm A")}`,
-          ""
-        ];
 
-        const start_time = moment.min(
+        const open_time = moment.min(
           rooms.map(room => {
             const hours = room.location.hours[now.day()].starthours;
             const time = moment()
@@ -212,7 +233,7 @@
             return time;
           })
         );
-        const end_time = moment.max(
+        const close_time = moment.max(
           rooms.map(room => {
             const hours = room.location.hours[now.day()].endhours;
             const time = moment()
@@ -222,64 +243,104 @@
           })
         );
 
-        const start_str = start_time.format(dateFormat);
-        const end_str = end_time.format(dateFormat);
+        const cols = close_time.diff(open_time, "minutes") / 15;
+        const rows = rooms.length + 1;
 
-        code = [
-          ...code,
-          "  section Open",
-          `  Hours of Operation  :hidden hours, ${start_str}, ${end_str}`,
-          ""
-        ];
+        const stage2 = $("#stage2");
 
-        const open_range = moment.range(start_time, end_time);
+        // render open hours
+        stage2.html("");
+        stage2.css("grid-template-columns", `auto repeat(${cols}, 1fr)`);
+        const openDiv = $("<div/>", {
+          class: "open-header",
+          text: "Open"
+        });
+
+        const openStr = open_time.format("hh:mm A");
+        const closeStr = close_time.format("hh:mm A");
+        const openHoursDiv = $("<div/>", {
+          class: "open-hours",
+          text: `Opening hours: ${openStr} - ${closeStr}`,
+          style: "grid-column: 2 / -1"
+        });
+        stage2.append([openDiv, openHoursDiv]);
+
+        const drawHours = (rowStart = null) => {
+          for (let i = 0; i < cols / 4; i++) {
+            const time = open_time.clone().add(i, "hours");
+            const div = $("<div/>", {
+              text: `${time.format("h a")}`,
+              style: `grid-column: ${i * 4 + 2} / span 4;`,
+              class: "grid-hours"
+            });
+            if (rowStart !== null) {
+              div.css("grid-row", `${rowStart}`);
+            }
+            stage2.append(div);
+          }
+        };
+
+        drawHours();
+
+        const open_range = moment.range(open_time, close_time);
         const events = await getRoomsAvailability(rooms);
+
+        let cRow = 2; // 1st=header, 2nd=hours, hence the offset
         for (const room of rooms) {
+          cRow++;
+          const roomNameDiv = $("<div/>", {
+            text: room.title,
+            style: `grid-row: ${cRow};`,
+            class: "room-name"
+          });
+          stage2.append(roomNameDiv);
+
           if (events[room.id] && events[room.id].is_closed) {
+            const row = $("<div/>", {
+              text: "",
+              class: "room-reserved room-closed"
+            });
+            $(row).css("grid-row", `${cRow}`);
+            $(row).css("grid-column", "2 / -1");
+            stage2.append(row);
             continue;
           }
 
-          let section = [` section ${room.title}`];
           const dates = events[room.id] && events[room.id].dates;
-          if (dates) {
-            for (const evtId in dates) {
-              let { start, end } = dates[evtId];
-              start = moment.utc(start);
-              end = moment.utc(end);
+          if (!dates) {
+            continue;
+          }
 
-              // skip whatever isn't in the current day schedule
-              const range = moment.range(start, end);
-              if (!range.overlaps(open_range)) {
-                continue;
-              }
+          for (const evtId in dates) {
+            let { start, end } = dates[evtId];
+            start = moment.utc(start);
+            end = moment.utc(end);
 
-              // truncate to open hours
-              start = open_range.contains(start) ? start : open_range.start;
-              end = open_range.contains(end) ? end : open_range.end;
-
-              start = start.local().format(dateFormat);
-              end = end.local().format(dateFormat);
-              section = [
-                ...section,
-                `  Reserved  :reserved, ${start}, ${end}`,
-                ""
-              ];
+            // skip whatever isn't in the current day schedule
+            const range = moment.range(start, end);
+            if (!range.overlaps(open_range)) {
+              continue;
             }
-          }
-          code = [...code, ...section];
-        }
-        console.log(code);
 
-        const graphDefinition = code.join("\n");
-        const graph = mermaid.render(
-          "schedule-chart",
-          graphDefinition,
-          (svgCode, bindFunctions) => {
-            const stage2 = document.getElementById("stage2");
-            console.log(stage2);
-            stage2.innerHTML = svgCode;
+            // truncate to open hours
+            start = open_range.contains(start) ? start : open_range.start;
+            end = open_range.contains(end) ? end : open_range.end;
+
+            // render
+            const row = $("<div/>", {
+              text: "",
+              class: "reserved-event"
+            });
+            const colstart =
+              2 + Math.floor(start.diff(open_time, "minutes") / 15);
+            const colspan = Math.ceil(end.diff(start, "minutes") / 15);
+            $(row).css("grid-row", `${cRow}`);
+            $(row).css("grid-column", `${colstart} / span ${colspan}`);
+            stage2.append(row);
           }
-        );
+        }
+
+        drawHours(cRow + 1);
       };
 
       function showLocation() {
@@ -298,11 +359,11 @@
         stage2.innerHTML = "Loading...";
 
         setInterval(() => {
-          showChart(rooms).then(() => {
+          showChart2(rooms).then(() => {
             console.log("Chart updated");
           });
         }, 1000 * 60 * 5);
-        showChart(rooms).then(() => {
+        showChart2(rooms).then(() => {
           console.log("Chart displayed");
         });
       }
