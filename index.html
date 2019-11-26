@@ -27,6 +27,9 @@
     <script>
       window["moment-range"].extendMoment(moment);
 
+      // momentjs humanize time: 1 hour = >= 55 minutes
+      moment.relativeTimeThreshold('m', 55);
+
       const rcplBase = "https://larvis.com/rcpl";
       //const rcplBase = "https://www.richlandlibrary.com";
 
