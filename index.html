@@ -119,10 +119,10 @@
               acc +
               `
                         <li class="room-item">
-                          <input 
-                            type="checkbox" 
-                            class="room-input" 
-                            data-room="${room.id}" 
+                          <input
+                            type="checkbox"
+                            class="room-input"
+                            data-room="${room.id}"
                             />
                           ${room.title}
                         </li>`,
@@ -278,13 +278,19 @@
             end = open_range.contains(end) ? end : open_range.end;
 
             // render
-            const row = $("<div/>", {
-              text: "",
-              class: "reserved-event"
-            });
             const colstart =
               2 + Math.floor(start.diff(open_time, "minutes") / 15);
             const colspan = Math.ceil(end.diff(start, "minutes") / 15);
+            const startTime = start.local().format("hh:mm a");
+            console.log("start = " + start);
+            console.log("start time = " + startTime);
+            const endTime = end.local().format("hh:mm a");
+            const hrs = colspan / 4;
+            const row = $("<div/>", {
+              text: "",
+              class: "reserved-event",
+              title: `Reserved from ${startTime} to ${endTime} (${hrs} hrs)`
+            });
             $(row).css("grid-row", `${cRow}`);
             $(row).css("grid-column", `${colstart} / span ${colspan}`);
             stage2.append(row);
