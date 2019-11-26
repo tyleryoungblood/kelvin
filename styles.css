@@ -17,11 +17,11 @@
 
 #stage2 {
   display: grid;
-  background-color: lightblue;
+  background-color: #a7d4ee;
 }
 
 #stage2 > div {
-  border: 1px solid blue;
+  border: 1px solid #008db1;
   background-color: white;
   padding: 0.3em;
   margin: 0.1em;
@@ -29,8 +29,9 @@
 }
 
 #stage2 > div.reserved-event {
-  background-color: darkblue;
-  border: 0;
+  background-color: #008db1;
+  border: 1px solid #008db1;
+  border-radius: 5px;
 }
 
 #stage2 > div.room-name {
