@@ -23,23 +23,9 @@
       integrity="sha256-bB6c2ZfNzG6Tv8MSu/pqUl0y91h86M/T+1w0WrCZhGw="
       crossorigin="anonymous"
     ></script>
-    <script src="https://unpkg.com/mermaid@8.4.2/dist/mermaid.min.js"></script>
+
     <script>
       window["moment-range"].extendMoment(moment);
-
-      const mermaidConfig = {
-        startOnLoad: true,
-        gantt: {
-          titleTopMargin: 25,
-          barHeight: 20,
-          barGap: 10,
-          topPadding: 75,
-          leftPadding: 175
-        },
-        theme: "neutral"
-      };
-
-      mermaid.initialize(mermaidConfig);
 
       const rcplBase = "https://larvis.com/rcpl";
       //const rcplBase = "https://www.richlandlibrary.com";
