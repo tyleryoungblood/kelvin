@@ -163,7 +163,7 @@
 
       const getRoomsAvailability = async (rooms, date = null) => {
         // show the selected date between prev/next buttons
-        date = date || moment();
+        date = date.clone() || moment();
         const dateSelected = document.getElementById("dateSelected");
         dateSelected.innerHTML = date.format("dddd, MMMM Do");
 
@@ -233,26 +233,24 @@
         const openHoursDiv = $("<div/>", {
           class: "open-hours",
           text: `Opening hours: ${openStr} - ${closeStr}`,
-          style: "grid-column: 2 / -1"
+          style: "grid-column: 2 / -1; grid-row: 1;"
         });
         stage2.append([openDiv, openHoursDiv]);
 
-        const drawHours = (rowStart = null) => {
+        const drawHours = (rowStart = 2) => {
           for (let i = 0; i < cols / 4; i++) {
             const time = open_time.clone().add(i, "hours");
             const div = $("<div/>", {
               text: `${time.format("h a")}`,
-              style: `grid-column: ${i * 4 + 2} / span 4;`,
               class: "grid-hours"
             });
-            if (rowStart !== null) {
-              div.css("grid-row", `${rowStart}`);
-            }
+            div.css("grid-column", `${i * 4 + 2} / span 4`);
+            div.css("grid-row", `${rowStart}`);
             stage2.append(div);
           }
         };
 
-        drawHours();
+        drawHours(2);
 
         const open_range = moment.range(open_time, close_time);
         const events = await getRoomsAvailability(rooms, date);
@@ -300,7 +298,7 @@
 
             // render
             const colstart =
-              2 + Math.floor(start.diff(open_time, "minutes") / 15);
+              3 + Math.floor(start.diff(open_time, "minutes") / 15);
             const colspan = Math.ceil(end.diff(start, "minutes") / 15);
             const day = start.local().format("MMM DD");
             const startTime = start.local().format("hh:mm a");
@@ -318,16 +316,14 @@
         }
 
         // draw border
-        /*
-        const div = $("<div/>", {
-          "class": "filter",
-        });
-        div.css("border", "solid 1px black");
-        div.css("z-index", 10);
-        div.css("grid-column", "1 / -1");
-        div.css("grid-row", "1");
-        stage2.append(div);
-        */
+        for(let i = 0; i < cols / 4; i++) {
+          const div = $("<div/>", {
+            "class": "highlight",
+          });
+          div.css("grid-column", `${(i*4) + 2} / span 4`);
+          div.css("grid-row", `2 / ${cRow + 3}`);
+          stage2.append(div);
+        }
 
         drawHours(cRow + 1);
 
@@ -347,24 +343,28 @@
         $("#datePicker").show().removeClass("hidden");
         $("#stage2").html("Loading...");
 
-        let selectedDate = moment();
+        let selectedDate = moment().local();
 
-        const changeDate = (date) => {
-          selectedDate = date;
-          showChart(rooms, selectedDate);
+        const changeDate = date => {
+          console.log(selectedDate);
+          selectedDate = moment(date);
+          console.log("Changed date", date.format());
+          showChart(rooms, selectedDate.clone());
         };
 
         // register event handlers
         $("#nextDay").click(() => changeDate(selectedDate.clone().add(1, "days")));
         $("#prevDay").click(() => changeDate(selectedDate.clone().subtract(1, "days")));
 
+        console.log("selected date = ", selectedDate.format());
+
         setInterval(() => {
-          showChart(rooms, selectedDate).then(() => {
+          showChart(rooms, selectedDate.clone()).then(() => {
             console.log(`Chart updated: ${moment().format()}`);
           });
         }, 1000 * 60 * 5);
 
-        showChart(rooms, selectedDate).then(() => {
+        showChart(rooms, selectedDate.clone()).then(() => {
           console.log(`Chart displayed ${moment().format()}`);
         });
       }
