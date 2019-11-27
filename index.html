@@ -9,7 +9,7 @@
     <div id="datePicker" class="hidden">
       <div class="wrapper">
         <button id="prevDay">&larr; Prev</button>
-        <span id="today">bla</span>
+        <span id="dateSelected"></span>
         <button id="nextDay">Next &rarr;</button>
       </div>
     </div>
@@ -33,9 +33,12 @@
 
     <script>
       window["moment-range"].extendMoment(moment);
+      //var date = date || moment().add(6, "days");
+      var date = date || moment();
+      var rooms = rooms || null;
 
       // momentjs humanize time: 1 hour = >= 55 minutes
-      moment.relativeTimeThreshold('m', 55);
+      moment.relativeTimeThreshold("m", 55);
 
       const rcplBase = "https://larvis.com/rcpl";
       //const rcplBase = "https://www.richlandlibrary.com";
@@ -161,7 +164,10 @@
       };
 
       const getRoomsAvailability = async (rooms, date = null) => {
-        date = date || moment();
+        // show the selected date between prev/next buttons
+        const dateSelected = document.getElementById("dateSelected");
+        dateSelected.innerHTML = date.format("dddd, MMMM Do");
+
         const url = rcplBase + "/api/rooms/availability";
         const dateFormat = "YYYY-MM-DDTHH:mm:ss"; // without the Z
         const payload = {
@@ -170,7 +176,8 @@
             .startOf("day")
             .utc()
             .format(dateFormat),
-          end: date.clone()
+          end: date
+            .clone()
             .endOf("day")
             .utc()
             .format(dateFormat)
@@ -182,14 +189,33 @@
         return await response.json();
       };
 
+      changeDate = (pressed, date = null) => {
+        pressed === "next"
+          ? (date = date.add(1, "d"))
+          : (date = date.add(-1, "d"));
+        showChart(rooms, date.local());
+      };
+
+      nextDay = document.getElementById("nextDay");
+      nextDay.addEventListener("click", function() {
+        changeDate("next", date);
+      });
+
+      prevDay = document.getElementById("prevDay");
+      prevDay.addEventListener("click", function() {
+        changeDate("prev", date);
+      });
+
       const showChart = async (rooms, date = null) => {
         console.log("Showing chart");
+
         date = date || moment();
 
         const open_time = moment.min(
           rooms.map(room => {
             const hours = room.location.hours[date.day()].starthours;
-            const time = date.clone()
+            const time = date
+              .clone()
               .hour(Math.floor(hours / 100))
               .minute(hours % 100);
             return time;
@@ -198,7 +224,8 @@
         const close_time = moment.max(
           rooms.map(room => {
             const hours = room.location.hours[date.day()].endhours;
-            const time = date.clone()
+            const time = date
+              .clone()
               .hour(Math.floor(hours / 100))
               .minute(hours % 100);
             return time;
@@ -292,17 +319,16 @@
 
             // render
             const colstart =
-              3 + Math.floor(start.diff(open_time, "minutes") / 15);
+              2 + Math.floor(start.diff(open_time, "minutes") / 15);
             const colspan = Math.ceil(end.diff(start, "minutes") / 15);
+            const day = start.local().format("MMM DD");
             const startTime = start.local().format("hh:mm a");
-            console.log("start = " + start);
-            console.log("start time = " + startTime);
             const endTime = end.local().format("hh:mm a");
             const hrs = moment.duration(end.diff(start)).humanize(false);
             const row = $("<div/>", {
               text: "",
               class: "reserved-event",
-              title: `Reserved from ${startTime} to ${endTime} (${hrs})`
+              title: `Reserved on ${day} from ${startTime} to ${endTime} (${hrs})`
             });
             $(row).css("grid-row", `${cRow}`);
             $(row).css("grid-column", `${colstart} / span ${colspan}`);
@@ -327,7 +353,7 @@
 
       function showLocation() {
         console.log("Showing locations");
-        const rooms = Array.prototype.map.call(
+        rooms = Array.prototype.map.call(
           document.querySelectorAll(".room-input:checked"),
           el => {
             return findRoom(el.dataset.room);
@@ -338,9 +364,6 @@
 
         document.getElementById("stage1").classList.add("hidden");
         document.getElementById("datePicker").classList.remove("hidden");
-        const today = document.getElementById("today");
-        const dateString = new Date().toDateString();
-        today.innerHTML = dateString;
         const stage2 = document.getElementById("stage2");
         stage2.innerHTML = "Loading...";
 
@@ -351,7 +374,7 @@
           });
         }, 1000 * 60 * 5);
         */
-        showChart(rooms, moment().add(5, 'days')).then(() => {
+        showChart(rooms, date).then(() => {
           console.log("Chart displayed");
         });
       }
