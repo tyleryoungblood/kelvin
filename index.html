@@ -153,16 +153,17 @@
         }
       };
 
-      const getRoomsAvailability = async rooms => {
+      const getRoomsAvailability = async (rooms, date = null) => {
+        date = date || moment();
         const url = rcplBase + "/api/rooms/availability";
         const dateFormat = "YYYY-MM-DDTHH:mm:ss"; // without the Z
         const payload = {
           rooms: rooms.map(room => room.id),
-          start: moment()
+          start: date
             .startOf("day")
             .utc()
             .format(dateFormat),
-          end: moment()
+          end: date.clone()
             .endOf("day")
             .utc()
             .format(dateFormat)
@@ -174,14 +175,14 @@
         return await response.json();
       };
 
-      const showChart2 = async rooms => {
+      const showChart = async (rooms, date = null) => {
         console.log("Showing chart");
-        const now = moment();
+        date = date || moment();
 
         const open_time = moment.min(
           rooms.map(room => {
-            const hours = room.location.hours[now.day()].starthours;
-            const time = moment()
+            const hours = room.location.hours[date.day()].starthours;
+            const time = date.clone()
               .hour(Math.floor(hours / 100))
               .minute(hours % 100);
             return time;
@@ -189,8 +190,8 @@
         );
         const close_time = moment.max(
           rooms.map(room => {
-            const hours = room.location.hours[now.day()].endhours;
-            const time = moment()
+            const hours = room.location.hours[date.day()].endhours;
+            const time = date.clone()
               .hour(Math.floor(hours / 100))
               .minute(hours % 100);
             return time;
@@ -210,8 +211,8 @@
           text: "Open"
         });
 
-        const openStr = open_time.format("hh:mm A");
-        const closeStr = close_time.format("hh:mm A");
+        const openStr = open_time.format("MM/DD hh:mm A");
+        const closeStr = close_time.format("MM/DD hh:mm A");
         const openHoursDiv = $("<div/>", {
           class: "open-hours",
           text: `Opening hours: ${openStr} - ${closeStr}`,
@@ -237,7 +238,7 @@
         drawHours();
 
         const open_range = moment.range(open_time, close_time);
-        const events = await getRoomsAvailability(rooms);
+        const events = await getRoomsAvailability(rooms, date);
 
         let cRow = 2; // 1st=header, 2nd=hours, hence the offset
         for (const room of rooms) {
@@ -300,6 +301,18 @@
           }
         }
 
+        // draw border
+        /*
+        const div = $("<div/>", {
+          "class": "filter",
+        });
+        div.css("border", "solid 1px black");
+        div.css("z-index", 10);
+        div.css("grid-column", "1 / -1");
+        div.css("grid-row", "1");
+        stage2.append(div);
+        */
+
         drawHours(cRow + 1);
       };
 
@@ -318,12 +331,14 @@
         const stage2 = document.getElementById("stage2");
         stage2.innerHTML = "Loading...";
 
+        /*
         setInterval(() => {
-          showChart2(rooms).then(() => {
+          showChart(rooms).then(() => {
             console.log("Chart updated");
           });
         }, 1000 * 60 * 5);
-        showChart2(rooms).then(() => {
+        */
+        showChart(rooms, moment().add(5, 'days')).then(() => {
           console.log("Chart displayed");
         });
       }
