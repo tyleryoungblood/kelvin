@@ -27,6 +27,9 @@
     <script>
       window["moment-range"].extendMoment(moment);
 
+      // momentjs humanize time: 1 hour = >= 55 minutes
+      moment.relativeTimeThreshold('m', 55);
+
       const rcplBase = "https://larvis.com/rcpl";
       //const rcplBase = "https://www.richlandlibrary.com";
 
@@ -285,11 +288,11 @@
             console.log("start = " + start);
             console.log("start time = " + startTime);
             const endTime = end.local().format("hh:mm a");
-            const hrs = colspan / 4;
+            const hrs = moment.duration(end.diff(start)).humanize(false);
             const row = $("<div/>", {
               text: "",
               class: "reserved-event",
-              title: `Reserved from ${startTime} to ${endTime} (${hrs} hrs)`
+              title: `Reserved from ${startTime} to ${endTime} (${hrs})`
             });
             $(row).css("grid-row", `${cRow}`);
             $(row).css("grid-column", `${colstart} / span ${colspan}`);
