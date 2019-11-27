@@ -6,6 +6,13 @@
   </head>
   <body>
     <div id="stage1"></div>
+    <div id="datePicker" class="hidden">
+      <div class="wrapper">
+        <button id="prevDay">&larr; Prev</button>
+        <span id="today">bla</span>
+        <button id="nextDay">Next &rarr;</button>
+      </div>
+    </div>
     <div id="stage2"></div>
 
     <script
@@ -46,6 +53,7 @@
       const fetchCachedData = async () => {
         const now = moment();
         let data = localStorage.roomData && JSON.parse(localStorage.roomData);
+
         const invalid =
           !data ||
           !data.expires ||
@@ -100,7 +108,6 @@
 
       // begin here
       fetchCachedData().then(data => {
-        console.log(data);
         const locations = getLocations(data).map(loc => ({
           ...loc,
           rooms: getLocationRooms(data, loc)
@@ -236,6 +243,8 @@
         const open_range = moment.range(open_time, close_time);
         const events = await getRoomsAvailability(rooms);
 
+        console.log(JSON.stringify(events));
+
         let cRow = 2; // 1st=header, 2nd=hours, hence the offset
         for (const room of rooms) {
           cRow++;
@@ -248,7 +257,7 @@
 
           if (events[room.id] && events[room.id].is_closed) {
             const row = $("<div/>", {
-              text: "",
+              text: `${events[room.id].closed_message}`,
               class: "room-reserved room-closed"
             });
             $(row).css("grid-row", `${cRow}`);
@@ -312,6 +321,10 @@
         console.log(rooms);
 
         document.getElementById("stage1").classList.add("hidden");
+        document.getElementById("datePicker").classList.remove("hidden");
+        const today = document.getElementById("today");
+        const dateString = new Date().toDateString();
+        today.innerHTML = dateString;
         const stage2 = document.getElementById("stage2");
         stage2.innerHTML = "Loading...";
 
