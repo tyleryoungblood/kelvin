@@ -32,10 +32,8 @@
     ></script>
 
     <script>
+      // init moment-range
       window["moment-range"].extendMoment(moment);
-      //var date = date || moment().add(6, "days");
-      var date = date || moment();
-      var rooms = rooms || null;
 
       // momentjs humanize time: 1 hour = >= 55 minutes
       moment.relativeTimeThreshold("m", 55);
@@ -149,7 +147,7 @@
                         </div>`;
         }
         html += '\n<button onClick="showLocation()">Show</button>';
-        document.getElementById("stage1").innerHTML = html;
+        $("#stage1").html(html);
         loadSelectedRooms();
       });
 
@@ -165,6 +163,7 @@
 
       const getRoomsAvailability = async (rooms, date = null) => {
         // show the selected date between prev/next buttons
+        date = date || moment();
         const dateSelected = document.getElementById("dateSelected");
         dateSelected.innerHTML = date.format("dddd, MMMM Do");
 
@@ -182,6 +181,7 @@
             .utc()
             .format(dateFormat)
         };
+
         const response = await fetch(url, {
           method: "POST",
           body: JSON.stringify(payload)
@@ -189,27 +189,9 @@
         return await response.json();
       };
 
-      changeDate = (pressed, date = null) => {
-        pressed === "next"
-          ? (date = date.add(1, "d"))
-          : (date = date.add(-1, "d"));
-        showChart(rooms, date.local());
-      };
-
-      nextDay = document.getElementById("nextDay");
-      nextDay.addEventListener("click", function() {
-        changeDate("next", date);
-      });
-
-      prevDay = document.getElementById("prevDay");
-      prevDay.addEventListener("click", function() {
-        changeDate("prev", date);
-      });
-
       const showChart = async (rooms, date = null) => {
-        console.log("Showing chart");
-
         date = date || moment();
+        console.log("Showing chart for ", date.format());
 
         const open_time = moment.min(
           rooms.map(room => {
@@ -235,10 +217,11 @@
         const cols = close_time.diff(open_time, "minutes") / 15;
         const rows = rooms.length + 1;
 
-        const stage2 = $("#stage2");
+        const stage2 = $("<div/>", {
+          id: "stage2",
+        });
 
         // render open hours
-        stage2.html("");
         stage2.css("grid-template-columns", `auto repeat(${cols}, 1fr)`);
         const openDiv = $("<div/>", {
           class: "open-header",
@@ -347,33 +330,42 @@
         */
 
         drawHours(cRow + 1);
+
+        // replace stage2, avoid the flash
+        $("#stage2").replaceWith(stage2);
       };
 
       function showLocation() {
         console.log("Showing locations");
-        rooms = Array.prototype.map.call(
-          document.querySelectorAll(".room-input:checked"),
-          el => {
-            return findRoom(el.dataset.room);
-          }
-        );
+        const rooms = $(".room-input:checked")
+          .map((idx, el) => findRoom(el.dataset.room))
+          .get();
         saveSelectedRooms(rooms);
-        console.log(rooms);
+        console.log("rooms", rooms);
 
-        document.getElementById("stage1").classList.add("hidden");
-        document.getElementById("datePicker").classList.remove("hidden");
-        const stage2 = document.getElementById("stage2");
-        stage2.innerHTML = "Loading...";
+        $("#stage1").hide();
+        $("#datePicker").show().removeClass("hidden");
+        $("#stage2").html("Loading...");
 
-        /*
+        let selectedDate = moment();
+
+        const changeDate = (date) => {
+          selectedDate = date;
+          showChart(rooms, selectedDate);
+        };
+
+        // register event handlers
+        $("#nextDay").click(() => changeDate(selectedDate.clone().add(1, "days")));
+        $("#prevDay").click(() => changeDate(selectedDate.clone().subtract(1, "days")));
+
         setInterval(() => {
-          showChart(rooms).then(() => {
-            console.log("Chart updated");
+          showChart(rooms, selectedDate).then(() => {
+            console.log(`Chart updated: ${moment().format()}`);
           });
         }, 1000 * 60 * 5);
-        */
-        showChart(rooms, date).then(() => {
-          console.log("Chart displayed");
+
+        showChart(rooms, selectedDate).then(() => {
+          console.log(`Chart displayed ${moment().format()}`);
         });
       }
     </script>
