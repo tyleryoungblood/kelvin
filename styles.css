@@ -83,3 +83,13 @@ button:active {
 #stage2 > div.room-name {
   background-color: white;
 }
+
+#stage2 > div.highlight {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: none;
+    z-index: 1;
+}
+
+#stage2 > div.highlight:nth-of-type(even) {
+    display: none;
+}
