@@ -86,8 +86,10 @@ button:active {
 }
 
 #stage2 > div.reserved-event {
+  /* background-color: rgba(0, 141, 177, .9); */
   background-color: #008db1;
   border: 1px solid #008db1;
+  mix-blend-mode: multiply;
   border-radius: 5px;
 }
 
