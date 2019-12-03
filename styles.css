@@ -106,6 +106,14 @@ button:active {
 }
 
 .grid-hours,
-.reserved-event {
+.reserved-event,
+.room-closed {
   z-index: 2;
+}
+
+#stage2 > .room-closed {
+  background-color: #ff7548;
+  border: 1px solid #ba4735;
+  border-radius: 5px;
+  color: white;
 }
