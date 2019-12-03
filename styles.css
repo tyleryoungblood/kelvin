@@ -96,11 +96,16 @@ button:active {
 }
 
 #stage2 > div.highlight {
-    background-color: rgba(255, 255, 255, 0.5);
-    border: none;
-    z-index: 1;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+  z-index: 1;
 }
 
 #stage2 > div.highlight:nth-of-type(even) {
-    display: none;
+  display: none;
+}
+
+.grid-hours,
+.reserved-event {
+  z-index: 2;
 }
