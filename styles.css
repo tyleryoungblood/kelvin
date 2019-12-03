@@ -61,6 +61,17 @@ button:active {
   transform: scale(0.99);
 }
 
+#stage1 h3 {
+  background-color: #008db1;
+  padding: 10px;
+  color: white;
+}
+
+#stage1 h3 input {
+  vertical-align: bottom;
+  margin-bottom: 8px;
+}
+
 #stage2 {
   display: grid;
   background-color: #a7d4ee;
