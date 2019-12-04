@@ -302,7 +302,7 @@
 
             // render
             const colstart =
-              3 + Math.floor(start.diff(open_time, "minutes") / 15);
+              2 + Math.ceil(start.diff(open_time, "minutes") / 15);
             const colspan = Math.ceil(end.diff(start, "minutes") / 15);
             const day = start.local().format("MMM DD");
             const startTime = start.local().format("hh:mm a");
