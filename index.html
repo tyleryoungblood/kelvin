@@ -371,6 +371,7 @@
         setInterval(() => {
           showChart(rooms, selectedDate.clone()).then(() => {
             console.log(`Chart updated: ${moment().format()}`);
+            createRedLine();
           });
         }, 1000 * 60); // update every minute;
 
