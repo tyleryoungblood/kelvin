@@ -75,14 +75,19 @@ button:active {
 #stage2 {
   display: grid;
   background-color: #a7d4ee;
+  outline: 1px solid #008db1;
 }
 
 #stage2 > div {
-  border: 1px solid #008db1;
+  outline: 1px solid #008db1;
   background-color: white;
   padding: 0.3em;
-  margin: 0.1em;
   color: black;
+}
+
+#stage2 > div.reserved-event {
+  margin: 1px;
+  outline: none;
 }
 
 #stage2 > div.reserved-event {
@@ -108,6 +113,10 @@ button:active {
 }
 
 .grid-hours,
+.open-hours {
+  z-index: 3;
+}
+
 .reserved-event,
 .room-closed {
   z-index: 2;
@@ -118,4 +127,10 @@ button:active {
   border: 1px solid #ba4735;
   border-radius: 5px;
   color: white;
+}
+
+#red-line {
+  position: absolute;
+  border-left: 6px solid #cc2631;
+  z-index: 2;
 }

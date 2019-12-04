@@ -38,8 +38,8 @@
       // momentjs humanize time: 1 hour = >= 55 minutes
       moment.relativeTimeThreshold("m", 55);
 
-      const rcplBase = "https://larvis.com/rcpl";
-      //const rcplBase = "https://www.richlandlibrary.com";
+      // const rcplBase = "https://larvis.com/rcpl";
+      const rcplBase = "https://www.richlandlibrary.com";
 
       const fetchJson = async url => {
         const response = await fetch(url);
@@ -376,10 +376,12 @@
 
         showChart(rooms, selectedDate.clone()).then(() => {
           console.log(`Chart displayed ${moment().format()}`);
+          createRedLine();
         });
       }
     </script>
 
     <script src="js/check-uncheck-all.js"></script>
+    <script src="js/red-line.js"></script>
   </body>
 </html>
