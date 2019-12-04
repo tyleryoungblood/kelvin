@@ -119,39 +119,44 @@
 
         window.locationData = locations;
 
-        let html = [
-          "<p>",
-          "Select the rooms to show and click show at the bottom",
-          "</p>"
-        ].join("\n");
+        const stage1 = $('<div id="stage1" />');
+        stage1.append($("<p>Select the rooms to show and click show at the bottom</p>"));
+
         for (const loc of locations) {
-          let rstr = loc.rooms.reduce(
-            (acc, room) =>
-              acc +
-              `
-                        <li class="room-item">
-                          <input
-                            type="checkbox"
-                            class="room-input"
-                            data-room="${room.id}"
-                            />
-                          ${room.title}
-                        </li>`,
-            ""
-          );
-          html += `<div class="location" data-location="${loc.id}">
-                        <h3>
-                          <input 
-                            type="checkbox"
-                            class="check-uncheck-all" />
-                          ${loc.title}</h3>
-                        <ul class="room-list">
-                          ${rstr}
-                        </ul>
-                    </div>`;
+          const items = loc.rooms.map(
+            room => $(
+              `<li class="room-item">
+                <input
+                  type="checkbox"
+                  class="room-input"
+                  data-room="${room.id}"
+                  />
+                ${room.title}
+              </li>`));
+          const locDiv = $(`
+            <div class="location" data-location="${loc.id}">
+                <h3>
+                  <input 
+                    type="checkbox"
+                    class="check-uncheck-all" />
+                  ${loc.title}
+                </h3>
+                <ul class="room-list"></ul>
+            </div>`);
+          locDiv.find(".room-list").first().append(items);
+          locDiv.find(".check-uncheck-all").change((event) => {
+            const el = event.currentTarget;
+            console.log(el);
+            $(el)
+              .parent()
+              .siblings()
+              .find('input:checkbox')
+              .prop('checked', el.checked)
+          });
+          stage1.append(locDiv);
         }
-        html += '\n<button onClick="showLocation()">Show</button>';
-        $("#stage1").html(html);
+        stage1.append($('<button onClick="showLocation()">Show</button>'));
+        $("#stage1").replaceWith(stage1);
         loadSelectedRooms();
       });
 
@@ -380,6 +385,6 @@
       }
     </script>
 
-    <script src="js/check-uncheck-all.js"></script>
+    <!--<script src="js/check-uncheck-all.js"></script>-->
   </body>
 </html>
