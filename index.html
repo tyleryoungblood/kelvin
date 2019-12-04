@@ -376,10 +376,12 @@
 
         showChart(rooms, selectedDate.clone()).then(() => {
           console.log(`Chart displayed ${moment().format()}`);
+          createRedLine();
         });
       }
     </script>
 
     <script src="js/check-uncheck-all.js"></script>
+    <script src="js/red-line.js"></script>
   </body>
 </html>
