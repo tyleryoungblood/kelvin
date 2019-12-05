@@ -22,6 +22,13 @@ createRedLine = () => {
    $('#stage2').append(redLine);
 }
 
+// re-draw red line when a user resizes the window
+$(window).resize(function() {
+   console.log('re-drawing red line')
+   $('#red-line').remove()
+   createRedLine(); 
+});
+
 
 
 
