@@ -260,6 +260,41 @@
         const events = await getRoomsAvailability(rooms, date);
 
         let cRow = 2; // 1st=header, 2nd=hours, hence the offset
+
+        // Sort rooms at Main by room number
+        // Otherwise Meeting Rooms 200-214 show, and then Study Rooms 206-209 show.
+        // Instead it should show Meeting Room 200 ... Meeing Room 205, Study Room 206 ... Study Room 209, Meeting Room 213, Meeting Room 214
+        rooms = rooms.sort((a, b) => {
+          // check to see if this is a room located at main
+          if (
+            a.location.title == "Richland Library Main" &&
+            b.location.title == "Richland Library Main"
+          ) {
+            // sort rooms at main so that the meeting and study rooms are in numeric order.
+
+            // first, strip all non-numeric values from a and b strings
+            a = a.title.replace(/\D/g, "");
+            b = b.title.replace(/\D/g, "");
+
+            // check to see if it's a single digit room, and if so, pad the digits with two leading zeros
+            // if you don't do this, Family Career Studio desk 1 and 2 display, then meeting and study rooms,
+            // and then Family Career Studio Desk 3 and 4 display
+            if (a.length > 0 && a.length < 3) {
+              a = "00" + a;
+            }
+
+            if (b.length > 0 && b.length < 3) {
+              b = "00" + b;
+            }
+
+            // check to make sure both a and b are rooms with numbers - prevents sorting BCRC above Auditorium
+            if (a >= 1 && b >= 1) {
+              // finally perform the sort
+              return a > b ? 1 : -1;
+            }
+          }
+        });
+
         for (const room of rooms) {
           cRow++;
           const roomNameDiv = $("<div/>", {
