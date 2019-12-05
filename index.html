@@ -405,13 +405,13 @@
 
         setInterval(() => {
           showChart(rooms, selectedDate.clone()).then(() => {
-            console.log(`Chart updated: ${moment().format()}`);
+            console.log(`Chart updated: ${moment().format("h:mm a")}`);
             createRedLine();
           });
         }, 1000 * 60); // update every minute;
 
         showChart(rooms, selectedDate.clone()).then(() => {
-          console.log(`Chart displayed ${moment().format()}`);
+          console.log(`Chart displayed ${moment().format("h:mm a")}`);
           createRedLine();
         });
       }
