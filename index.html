@@ -33,17 +33,17 @@
 
     <script>
       // init moment-range
-      window['moment-range'].extendMoment(moment);
+      window["moment-range"].extendMoment(moment);
 
       // momentjs humanize time: 1 hour = >= 55 minutes
-      moment.relativeTimeThreshold('m', 55);
+      moment.relativeTimeThreshold("m", 55);
 
       //const rcplBase = "https://larvis.com/rcpl";
-      //const rcplBase = "https://www.richlandlibrary.com";
+      const rcplBase = "https://www.richlandlibrary.com";
       //const rcplBase = 'http://localvm.richland-site.com';
 
       // use current hostname so this will work across local, dev, and prod
-      const rcplBase = window.location.protocol + '//' + window.location.hostname;
+      //const rcplBase = window.location.protocol + '//' + window.location.hostname;
 
       const fetchJson = async url => {
         const response = await fetch(url);
@@ -53,8 +53,8 @@
       const fetchData = async () => {
         const url =
           rcplBase +
-          '/jsonapi/node/room?filter%5Bstatus%5D%5Bvalue%5D=1&filter%5Bfield_staff_use_only%5D%5Bvalue%5D=false&filter%5Blocations%5D%5Bgroup%5D%5Bconjunction%5D=AND&filter%5BwithLocation%5D%5Bcondition%5D%5Bpath%5D=field_location.id&filter%5BwithLocation%5D%5Bcondition%5D%5Boperator%5D=%3C%3E&filter%5BwithLocation%5D%5Bcondition%5D%5BmemberOf%5D=locations&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5Bpath%5D=field_location.field_branch_location&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5Bvalue%5D=1&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5BmemberOf%5D=locations&fields%5Bnode--room%5D=uuid%2Cstatus%2Ctitle%2Croom_thumbnail%2Cfield_capacity_max%2Cfield_capacity_min%2Cfield_reservable_online%2Cfield_room_fees%2Cfield_room_standard_equipment%2Cfield_reservation_phone_number%2Cfield_text_content%2Cfield_text_intro%2Cfield_text_teaser%2Ctype%2Cuid%2Cimage_primary%2Cfield_location%2Cfield_room_type&include=image_primary%2Cimage_primary.field_media_image%2Cfield_location&sort=title';
-        console.log('Fetching rooms');
+          "/jsonapi/node/room?filter%5Bstatus%5D%5Bvalue%5D=1&filter%5Bfield_staff_use_only%5D%5Bvalue%5D=false&filter%5Blocations%5D%5Bgroup%5D%5Bconjunction%5D=AND&filter%5BwithLocation%5D%5Bcondition%5D%5Bpath%5D=field_location.id&filter%5BwithLocation%5D%5Bcondition%5D%5Boperator%5D=%3C%3E&filter%5BwithLocation%5D%5Bcondition%5D%5BmemberOf%5D=locations&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5Bpath%5D=field_location.field_branch_location&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5Bvalue%5D=1&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5BmemberOf%5D=locations&fields%5Bnode--room%5D=uuid%2Cstatus%2Ctitle%2Croom_thumbnail%2Cfield_capacity_max%2Cfield_capacity_min%2Cfield_reservable_online%2Cfield_room_fees%2Cfield_room_standard_equipment%2Cfield_reservation_phone_number%2Cfield_text_content%2Cfield_text_intro%2Cfield_text_teaser%2Ctype%2Cuid%2Cimage_primary%2Cfield_location%2Cfield_room_type&include=image_primary%2Cimage_primary.field_media_image%2Cfield_location&sort=title";
+        console.log("Fetching rooms");
         return await fetchJson(url);
       };
 
@@ -63,7 +63,9 @@
         let data = localStorage.roomData && JSON.parse(localStorage.roomData);
 
         const invalid =
-          !data || !data.expires || !now.isBefore(moment(data.expires).add(1, 'days'));
+          !data ||
+          !data.expires ||
+          !now.isBefore(moment(data.expires).add(1, "days"));
         if (invalid) {
           data = await fetchData();
           data.expires = moment().format();
@@ -73,8 +75,8 @@
       };
 
       const getLocations = data => {
-        return data['included']
-          .filter(obj => obj.type === 'node--location')
+        return data["included"]
+          .filter(obj => obj.type === "node--location")
           .map(obj => ({
             id: obj.id,
             title: obj.attributes.title,
@@ -83,10 +85,11 @@
       };
 
       const getLocationRooms = (data, location) => {
-        return data['data']
+        return data["data"]
           .filter(
             obj =>
-              obj.type === 'node--room' && obj.relationships.field_location.data.id === location.id
+              obj.type === "node--room" &&
+              obj.relationships.field_location.data.id === location.id
           )
           .map(obj => ({
             id: obj.id,
@@ -120,9 +123,11 @@
 
         window.locationData = locations;
 
-        let html = ['<p>', 'Select the rooms to show and click show at the bottom', '</p>'].join(
-          '\n'
-        );
+        let html = [
+          "<p>",
+          "Select the rooms to show and click show at the bottom",
+          "</p>"
+        ].join("\n");
         for (const loc of locations) {
           let rstr = loc.rooms.reduce(
             (acc, room) =>
@@ -136,7 +141,7 @@
                             />
                           ${room.title}
                         </li>`,
-            ''
+            ""
           );
           html += `<div class="location" data-location="${loc.id}">
                         <h3>
@@ -150,7 +155,7 @@
                     </div>`;
         }
         html += '\n<button onClick="showLocation()">Show</button>';
-        $('#stage1').html(html);
+        $("#stage1").html(html);
         loadSelectedRooms();
       });
 
@@ -167,26 +172,26 @@
       const getRoomsAvailability = async (rooms, date = null) => {
         // show the selected date between prev/next buttons
         date = date.clone() || moment();
-        const dateSelected = document.getElementById('dateSelected');
-        dateSelected.innerHTML = date.format('dddd, MMMM Do');
+        const dateSelected = document.getElementById("dateSelected");
+        dateSelected.innerHTML = date.format("dddd, MMMM Do");
 
-        const url = rcplBase + '/api/rooms/availability';
-        const dateFormat = 'YYYY-MM-DDTHH:mm:ss'; // without the Z
+        const url = rcplBase + "/api/rooms/availability";
+        const dateFormat = "YYYY-MM-DDTHH:mm:ss"; // without the Z
         const payload = {
           rooms: rooms.map(room => room.id),
           start: date
-            .startOf('day')
+            .startOf("day")
             .utc()
             .format(dateFormat),
           end: date
             .clone()
-            .endOf('day')
+            .endOf("day")
             .utc()
             .format(dateFormat)
         };
 
         const response = await fetch(url, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify(payload)
         });
         return await response.json();
@@ -194,7 +199,7 @@
 
       const showChart = async (rooms, date = null) => {
         date = date || moment();
-        console.log('Showing chart for ', date.format());
+        console.log("Showing chart for ", date.format());
 
         const open_time = moment.min(
           rooms.map(room => {
@@ -217,11 +222,11 @@
           })
         );
 
-        const cols = close_time.diff(open_time, 'minutes') / 15;
+        const cols = close_time.diff(open_time, "minutes") / 15;
         const rows = rooms.length + 1;
 
-        const stage2 = $('<div/>', {
-          id: 'stage2'
+        const stage2 = $("<div/>", {
+          id: "stage2"
         });
 
         // render open hours
@@ -231,24 +236,24 @@
           text: ''
         });
 
-        const openStr = open_time.format('MM/DD hh:mm A');
-        const closeStr = close_time.format('MM/DD hh:mm A');
-        const openHoursDiv = $('<div/>', {
-          class: 'open-hours',
+        const openStr = open_time.format("MM/DD hh:mm A");
+        const closeStr = close_time.format("MM/DD hh:mm A");
+        const openHoursDiv = $("<div/>", {
+          class: "open-hours",
           text: `Opening hours: ${openStr} - ${closeStr}`,
-          style: 'grid-column: 2 / -1; grid-row: 1;'
+          style: "grid-column: 2 / -1; grid-row: 1;"
         });
         stage2.append([openDiv, openHoursDiv]);
 
         const drawHours = (rowStart = 2) => {
           for (let i = 0; i < cols / 4; i++) {
-            const time = open_time.clone().add(i, 'hours');
-            const div = $('<div/>', {
-              text: `${time.format('h a')}`,
-              class: 'grid-hours'
+            const time = open_time.clone().add(i, "hours");
+            const div = $("<div/>", {
+              text: `${time.format("h a")}`,
+              class: "grid-hours"
             });
-            div.css('grid-column', `${i * 4 + 2} / span 4`);
-            div.css('grid-row', `${rowStart}`);
+            div.css("grid-column", `${i * 4 + 2} / span 4`);
+            div.css("grid-row", `${rowStart}`);
             stage2.append(div);
           }
         };
@@ -266,24 +271,24 @@
         rooms = rooms.sort((a, b) => {
           // check to see if this is a room located at main
           if (
-            a.location.title == 'Richland Library Main' &&
-            b.location.title == 'Richland Library Main'
+            a.location.title == "Richland Library Main" &&
+            b.location.title == "Richland Library Main"
           ) {
             // sort rooms at main so that the meeting and study rooms are in numeric order.
 
             // first, strip all non-numeric values from a and b strings
-            a = a.title.replace(/\D/g, '');
-            b = b.title.replace(/\D/g, '');
+            a = a.title.replace(/\D/g, "");
+            b = b.title.replace(/\D/g, "");
 
             // check to see if it's a single digit room, and if so, pad the digits with two leading zeros
             // if you don't do this, Family Career Studio desk 1 and 2 display, then meeting and study rooms,
             // and then Family Career Studio Desk 3 and 4 display
             if (a.length > 0 && a.length < 3) {
-              a = '00' + a;
+              a = "00" + a;
             }
 
             if (b.length > 0 && b.length < 3) {
-              b = '00' + b;
+              b = "00" + b;
             }
 
             // check to make sure both a and b are rooms with numbers - prevents sorting BCRC above Auditorium
@@ -296,20 +301,20 @@
 
         for (const room of rooms) {
           cRow++;
-          const roomNameDiv = $('<div/>', {
+          const roomNameDiv = $("<div/>", {
             text: room.title,
             style: `grid-row: ${cRow};`,
-            class: 'room-name'
+            class: "room-name"
           });
           stage2.append(roomNameDiv);
 
           if (events[room.id] && events[room.id].is_closed) {
-            const row = $('<div/>', {
+            const row = $("<div/>", {
               text: `${events[room.id].closed_message}`,
-              class: 'room-reserved room-closed'
+              class: "room-reserved room-closed"
             });
-            $(row).css('grid-row', `${cRow}`);
-            $(row).css('grid-column', '2 / -1');
+            $(row).css("grid-row", `${cRow}`);
+            $(row).css("grid-column", "2 / -1");
             stage2.append(row);
             continue;
           }
@@ -335,77 +340,82 @@
             end = open_range.contains(end) ? end : open_range.end;
 
             // render
-            const colstart = 2 + Math.ceil(start.diff(open_time, 'minutes') / 15);
-            const colspan = Math.ceil(end.diff(start, 'minutes') / 15);
-            const day = start.local().format('MMM DD');
-            const startTime = start.local().format('hh:mm a');
-            const endTime = end.local().format('hh:mm a');
+            const colstart =
+              2 + Math.ceil(start.diff(open_time, "minutes") / 15);
+            const colspan = Math.ceil(end.diff(start, "minutes") / 15);
+            const day = start.local().format("MMM DD");
+            const startTime = start.local().format("hh:mm a");
+            const endTime = end.local().format("hh:mm a");
             const hrs = moment.duration(end.diff(start)).humanize(false);
-            const row = $('<div/>', {
-              text: '',
-              class: 'reserved-event',
+            const row = $("<div/>", {
+              text: "",
+              class: "reserved-event",
               title: `Reserved on ${day} from ${startTime} to ${endTime} (${hrs})`
             });
-            $(row).css('grid-row', `${cRow}`);
-            $(row).css('grid-column', `${colstart} / span ${colspan}`);
+            $(row).css("grid-row", `${cRow}`);
+            $(row).css("grid-column", `${colstart} / span ${colspan}`);
             stage2.append(row);
           }
         }
 
         // draw border
         for (let i = 0; i < cols / 4; i++) {
-          const div = $('<div/>', {
-            class: 'highlight'
+          const div = $("<div/>", {
+            class: "highlight"
           });
-          div.css('grid-column', `${i * 4 + 2} / span 4`);
-          div.css('grid-row', `2 / ${cRow + 3}`);
+          div.css("grid-column", `${i * 4 + 2} / span 4`);
+          div.css("grid-row", `2 / ${cRow + 3}`);
           stage2.append(div);
         }
 
         drawHours(cRow + 1);
 
         // replace stage2, avoid the flash
-        $('#stage2').replaceWith(stage2);
+        $("#stage2").replaceWith(stage2);
       };
 
       function showLocation() {
-        console.log('Showing locations');
-        const rooms = $('.room-input:checked')
+        console.log("Showing locations");
+        const rooms = $(".room-input:checked")
           .map((idx, el) => findRoom(el.dataset.room))
           .get();
         saveSelectedRooms(rooms);
-        console.log('rooms', rooms);
+        console.log("rooms", rooms);
 
-        $('#stage1').hide();
-        $('#datePicker')
+        $("#stage1").hide();
+        $("#datePicker")
           .show()
-          .removeClass('hidden');
-        $('#stage2').html('Loading...');
+          .removeClass("hidden");
+        $("#stage2").html("Loading...");
 
         let selectedDate = moment().local();
 
         const changeDate = date => {
           console.log(selectedDate);
           selectedDate = moment(date);
-          console.log('Changed date', date.format());
+          console.log("Changed date", date.format());
           showChart(rooms, selectedDate.clone());
         };
 
         // register event handlers
-        $('#nextDay').click(() => changeDate(selectedDate.clone().add(1, 'days')));
-        $('#prevDay').click(() => changeDate(selectedDate.clone().subtract(1, 'days')));
+        $("#nextDay").click(() =>
+          changeDate(selectedDate.clone().add(1, "days"))
+        );
+        $("#prevDay").click(() =>
+          changeDate(selectedDate.clone().subtract(1, "days"))
+        );
 
-        console.log('selected date = ', selectedDate.format());
+        console.log("selected date = ", selectedDate.format());
 
         setInterval(() => {
           showChart(rooms, selectedDate.clone()).then(() => {
-            console.log(`Chart updated: ${moment().format('h:mm a')}`);
+            console.log(`Chart updated: ${moment().format("h:mm a")}`);
             createRedLine();
           });
         }, 1000 * 60); // update every minute;
 
         showChart(rooms, selectedDate.clone()).then(() => {
-          console.log(`Chart displayed ${moment().format('h:mm a')}`);
+          console.log(`Chart displayed ${moment().format("h:mm a")}`);
           createRedLine();
         });
       }
