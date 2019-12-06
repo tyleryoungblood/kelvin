@@ -167,5 +167,5 @@ button:active {
 #red-line {
   position: absolute;
   border-left: 6px solid #cc2631;
-  z-index: 2;
+  z-index: 4;
 }
