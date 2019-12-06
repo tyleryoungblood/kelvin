@@ -117,6 +117,10 @@ button:active {
   z-index: 3;
 }
 
+#stage2 > div.open-header {
+  background-color: #a7d4ee;
+}
+
 .reserved-event,
 .room-closed {
   z-index: 2;
