@@ -100,6 +100,37 @@ button:active {
 
 #stage2 > div.room-name {
   background-color: white;
+  position: relative;
+}
+
+#stage2 > div.reserved-event {
+  position: relative;
+  z-index: 4;
+}
+
+#stage2 > div.room-name:before,
+#stage2 > div.reserved-event:before {
+  content: '';
+  display: block;
+  width: 200vw;
+  height: 100%;
+
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: -100vw;
+}
+
+#stage2 > div.reserved-event:before {
+  top: -2px;
+  width: 0;
+  height: calc(100% + 4px);
+}
+
+#stage2 > div.room-name:hover:before,
+#stage2 > div.reserved-event:hover:before {
+  background-color: rgba(255, 0, 0, 0.3) !important;
+  width: 200vw;
 }
 
 #stage2 > div.highlight {
