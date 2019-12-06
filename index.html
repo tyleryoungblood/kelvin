@@ -230,10 +230,10 @@
         });
 
         // render open hours
-        stage2.css("grid-template-columns", `auto repeat(${cols}, 1fr)`);
-        const openDiv = $("<div/>", {
-          class: "open-header",
-          text: "Open"
+        stage2.css('grid-template-columns', `auto repeat(${cols}, 1fr)`);
+        const openDiv = $('<div/>', {
+          class: 'open-header',
+          text: ''
         });
 
         const openStr = open_time.format("MM/DD hh:mm A");
