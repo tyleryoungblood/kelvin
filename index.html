@@ -5,15 +5,17 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
-    <div id="stage1"></div>
-    <div id="datePicker" class="hidden">
-      <div class="wrapper">
-        <button id="prevDay">&larr; Prev</button>
-        <span id="dateSelected"></span>
-        <button id="nextDay">Next &rarr;</button>
+    <div class="container">
+      <div id="stage1"></div>
+      <div id="datePicker" class="hidden">
+        <div class="wrapper">
+          <button id="prevDay">&larr; Prev</button>
+          <span id="dateSelected"></span>
+          <button id="nextDay">Next &rarr;</button>
+        </div>
       </div>
+      <div id="stage2"></div>
     </div>
-    <div id="stage2"></div>
 
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
@@ -38,8 +40,8 @@
       // momentjs humanize time: 1 hour = >= 55 minutes
       moment.relativeTimeThreshold("m", 55);
 
-      //const rcplBase = "https://larvis.com/rcpl";
       const rcplBase = "https://www.richlandlibrary.com";
+      //const rcplBase = "https://larvis.com/rcpl";
       //const rcplBase = 'http://localvm.richland-site.com';
 
       // use current hostname so this will work across local, dev, and prod
@@ -123,11 +125,7 @@
 
         window.locationData = locations;
 
-        let html = [
-          "<p>",
-          "Select the rooms to show and click show at the bottom",
-          "</p>"
-        ].join("\n");
+        let html = '<p class="intro-text">Select the rooms to show and click show at the bottom</p>';
         for (const loc of locations) {
           let rstr = loc.rooms.reduce(
             (acc, room) =>
@@ -352,8 +350,10 @@
               class: "reserved-event",
               title: `Reserved on ${day} from ${startTime} to ${endTime} (${hrs})`
             });
-            $(row).css("grid-row", `${cRow}`);
-            $(row).css("grid-column", `${colstart} / span ${colspan}`);
+            $(row).css('grid-row', `${cRow}`);
+            $(row).css('grid-column', `${colstart} / span ${colspan}`);
+            $(row).data("start", start.local());
+            $(row).data("end", end.local());
             stage2.append(row);
           }
         }
@@ -407,12 +407,14 @@
 
         console.log("selected date = ", selectedDate.format());
 
+        /*
         setInterval(() => {
           showChart(rooms, selectedDate.clone()).then(() => {
             console.log(`Chart updated: ${moment().format("h:mm a")}`);
             createRedLine();
           });
         }, 1000 * 60); // update every minute;
+        */
 
         showChart(rooms, selectedDate.clone()).then(() => {
           console.log(`Chart displayed ${moment().format("h:mm a")}`);

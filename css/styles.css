@@ -1,6 +1,8 @@
 * {
   box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
+  padding: 0;
+  margin: 0;
 }
 
 .hidden {
@@ -9,6 +11,25 @@
 
 .room-list {
   list-style: none;
+}
+
+.room-item {
+  padding: 8px 0;
+  font-size: 21px;
+}
+
+.room-input {
+  margin: 0px 31px 0 45px;
+  transform: scale(1.2);
+}
+
+.room-item:nth-child(even) {
+  background: #E3E3E3;
+}
+
+p {
+  padding: 23px 0 23px 21px;
+  font-size: 24px;
 }
 
 .hidden {
@@ -69,7 +90,8 @@ button:active {
 
 #stage1 h3 input {
   vertical-align: bottom;
-  margin-bottom: 8px;
+  margin-bottom: 3px;
+  transform: scale(1.2);
 }
 
 #stage2 {
