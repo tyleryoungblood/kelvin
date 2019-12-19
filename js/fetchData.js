@@ -11,7 +11,31 @@ const fetchData = async () => {
     rcplBase +
     "/jsonapi/node/room?filter%5Bstatus%5D%5Bvalue%5D=1&filter%5Bfield_staff_use_only%5D%5Bvalue%5D=false&filter%5Blocations%5D%5Bgroup%5D%5Bconjunction%5D=AND&filter%5BwithLocation%5D%5Bcondition%5D%5Bpath%5D=field_location.id&filter%5BwithLocation%5D%5Bcondition%5D%5Boperator%5D=%3C%3E&filter%5BwithLocation%5D%5Bcondition%5D%5BmemberOf%5D=locations&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5Bpath%5D=field_location.field_branch_location&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5Bvalue%5D=1&filter%5BonlyBranchLocation%5D%5Bcondition%5D%5BmemberOf%5D=locations&fields%5Bnode--room%5D=uuid%2Cstatus%2Ctitle%2Croom_thumbnail%2Cfield_capacity_max%2Cfield_capacity_min%2Cfield_reservable_online%2Cfield_room_fees%2Cfield_room_standard_equipment%2Cfield_reservation_phone_number%2Cfield_text_content%2Cfield_text_intro%2Cfield_text_teaser%2Ctype%2Cuid%2Cimage_primary%2Cfield_location%2Cfield_room_type&include=image_primary%2Cimage_primary.field_media_image%2Cfield_location&sort=title";
   console.log("Fetching rooms");
-  return await fetchJson(url);
+
+  const data = await fetchJson(url);
+
+  // fetch all results
+  let nextUrl = data.links.next && data.links.next.href;
+  while(nextUrl) {
+    nextUrl = nextUrl.replace('https://www.richlandlibrary.com', rcplBase);
+    console.log("Fetching next page of rooms");
+
+    // dedup included / locations filter
+    const seenIds = new Set([...data.data, ...data.included].map(x => x.id));
+
+    const next_data = await fetchJson(nextUrl);
+    data.data = [
+      ...data.data,
+      ...next_data.data.filter(x => !seenIds.has(x.id))
+    ];
+    data.included = [
+      ...data.included,
+      ...next_data.included.filter(x => !seenIds.has(x.id))
+    ];
+    nextUrl = next_data.links.next && next_data.links.next.href;
+  }
+
+  return data;
 };
 
 export const fetchCachedData = async () => {
@@ -69,7 +93,7 @@ export const getLocations = data => {
 };
 
 export const getLocationRooms = (data, location) => {
-  return data["data"]
+  const rooms = data["data"]
     .filter(
       obj =>
       obj.type === "node--room" &&
@@ -80,6 +104,8 @@ export const getLocationRooms = (data, location) => {
       title: obj.attributes.title,
       location: location
     }));
+  rooms.sort((a, b) => a.title.localeCompare(b.title))
+  return rooms;
 };
 
 
