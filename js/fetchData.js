@@ -97,7 +97,7 @@ export const getLocationRooms = (data, location) => {
     .filter(
       obj =>
       obj.type === "node--room" &&
-      obj.relationships.field_location.data.id === location.id
+      obj.relationships.field_location.data[0].id === location.id
     )
     .map(obj => ({
       id: obj.id,
