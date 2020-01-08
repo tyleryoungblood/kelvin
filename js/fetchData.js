@@ -83,6 +83,7 @@ export const fetchRoomsAvailability = async (rooms, date = null) => {
 };
 
 export const getLocations = data => {
+  // TODO: generate missing hours or reset all hours to 9 - 9
   return data["included"]
     .filter(obj => obj.type === "node--location")
     .map(obj => ({
@@ -95,9 +96,10 @@ export const getLocations = data => {
 export const getLocationRooms = (data, location) => {
   const rooms = data["data"]
     .filter(
-      obj =>
-      obj.type === "node--room" &&
-      obj.relationships.field_location.data.id === location.id
+      obj => (
+        obj.type === "node--room"
+        && obj.relationships.field_location.data[0].id === location.id
+      )
     )
     .map(obj => ({
       id: obj.id,
