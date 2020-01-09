@@ -95,11 +95,11 @@ export const getLocations = data => {
 export const getLocationRooms = (data, location) => {
   const rooms = data["data"]
     .filter(
-      obj =>
-      obj.type === "node--room" &&
-      obj.relationships.field_location.data[0].id === location.id
-    )
-    .map(obj => ({
+      obj => (
+        obj.type === "node--room"
+        && obj.relationships.field_location.data[0].id === location.id
+      )
+    ).map(obj => ({
       id: obj.id,
       title: obj.attributes.title,
       location: location

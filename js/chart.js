@@ -8,7 +8,9 @@ export const drawChart = async (rooms, date = null) => {
 
   const open_time = moment.min(
     rooms.map(room => {
-      const hours = room.location.hours[date.day()].starthours;
+      const hours = (
+        room.location.hours.find((el) => el.day === date.day())
+        || {starhours: 900}).starthours;
       const time = date
         .clone()
         .hour(Math.floor(hours / 100))
@@ -18,7 +20,9 @@ export const drawChart = async (rooms, date = null) => {
   );
   const close_time = moment.max(
     rooms.map(room => {
-      const hours = room.location.hours[date.day()].endhours;
+      const hours = (
+        room.location.hours.find((el) => el.day === date.day())
+        || {endhours: 2100}).endhours;
       const time = date
         .clone()
         .hour(Math.floor(hours / 100))
