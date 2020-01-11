@@ -65,14 +65,15 @@ export const fetchRoomsAvailability = async (rooms, date = null) => {
   const payload = {
     rooms: rooms.map(room => room.id),
     start: date
-    .startOf("day")
-    .utc()
-    .format(dateFormat),
+      .clone()
+      .startOf("day")
+      .utc()
+      .format(dateFormat),
     end: date
-    .clone()
-    .endOf("day")
-    .utc()
-    .format(dateFormat)
+      .clone()
+      .endOf("day")
+      .utc()
+      .format(dateFormat)
   };
 
   const response = await fetch(url, {
